@@ -1,4 +1,11 @@
 package com.intellifinance.authservice.service;
 
-public class AuthService {
+import com.intellifinance.authservice.dto.request.RegisterRequest;
+import com.intellifinance.authservice.dto.response.RegisterResponse;
+
+public interface AuthService {
+
+    public RegisterResponse register(RegisterRequest request);
+
+    
 }
