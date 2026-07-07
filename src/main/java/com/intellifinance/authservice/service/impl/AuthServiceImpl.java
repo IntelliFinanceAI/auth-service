@@ -6,12 +6,16 @@ import com.intellifinance.authservice.entity.User;
 import com.intellifinance.authservice.enums.UserStatus;
 import com.intellifinance.authservice.exception.EmailAlreadyExistsException;
 import com.intellifinance.authservice.exception.PhoneAlreadyExistsException;
+import com.intellifinance.authservice.mapper.UserMapper;
 import com.intellifinance.authservice.repository.UserRepository;
 import com.intellifinance.authservice.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static com.intellifinance.authservice.constants.ErrorMessages.EMAIL_ALREADY_EXISTS;
+import static com.intellifinance.authservice.constants.ErrorMessages.PHONE_NUMBER_ALREADY_EXISTS;
 
 @Slf4j
 @Service
@@ -20,6 +24,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     @Override
     public RegisterResponse register(RegisterRequest request) {
@@ -28,24 +33,20 @@ public class AuthServiceImpl implements AuthService {
 
         if (userRepository.existsByEmail(request.email())) {
             log.warn("Registration failed. Email already exists: {}", request.email());
-            throw new EmailAlreadyExistsException("Email already exists");
+            throw new EmailAlreadyExistsException(EMAIL_ALREADY_EXISTS);
         }
         if (userRepository.existsByPhone(request.phone())) {
             log.warn("Registration failed. Phone number already exists: {}", request.phone());
-            throw new PhoneAlreadyExistsException("Phone number already exists");
+            throw new PhoneAlreadyExistsException(PHONE_NUMBER_ALREADY_EXISTS);
         }
-        User user = User.builder()
-                .fullName(request.fullName())
-                .email(request.email())
-                .phone(request.phone())
-                .password(passwordEncoder.encode(request.password()))
-                .status(UserStatus.ACTIVE)
-                .build();
+
+        User user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setStatus(UserStatus.ACTIVE);
+
         User savedUser = userRepository.save(user);
         log.info("User registered successfully. UserId: {}", savedUser.getId());
-        return new RegisterResponse(
-                savedUser.getId(),
-                "User Register Succesfully"
-        );
+        return userMapper.toRegisterResponse(savedUser);
+
     }
 }

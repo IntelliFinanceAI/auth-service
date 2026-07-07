@@ -10,6 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
+import static com.intellifinance.authservice.constants.AppConstants.USER_REGISTERED_SUCCESSFULLY;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -23,9 +27,9 @@ public class AuthController {
         RegisterResponse response = authService.register(request);
         ApiResponse<RegisterResponse> apiResponse = new ApiResponse<>(
                 true,
-                "User registered successfully",
+                USER_REGISTERED_SUCCESSFULLY,
                 response,
-                java.time.LocalDateTime.now()
+                LocalDateTime.now()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
