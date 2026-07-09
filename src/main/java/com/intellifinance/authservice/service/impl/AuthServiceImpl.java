@@ -1,10 +1,13 @@
 package com.intellifinance.authservice.service.impl;
 
+import com.intellifinance.authservice.dto.request.LoginRequest;
 import com.intellifinance.authservice.dto.request.RegisterRequest;
+import com.intellifinance.authservice.dto.response.LoginResponse;
 import com.intellifinance.authservice.dto.response.RegisterResponse;
 import com.intellifinance.authservice.entity.User;
 import com.intellifinance.authservice.enums.UserStatus;
 import com.intellifinance.authservice.exception.EmailAlreadyExistsException;
+import com.intellifinance.authservice.exception.InvalidCredentialsException;
 import com.intellifinance.authservice.exception.PhoneAlreadyExistsException;
 import com.intellifinance.authservice.mapper.UserMapper;
 import com.intellifinance.authservice.repository.UserRepository;
@@ -25,7 +28,14 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final JwtService jwtService;
 
+
+    /**
+     * register a user.....
+     * @param request
+     * @return
+     */
     @Override
     public RegisterResponse register(RegisterRequest request) {
 
@@ -45,8 +55,30 @@ public class AuthServiceImpl implements AuthService {
         user.setStatus(UserStatus.ACTIVE);
 
         User savedUser = userRepository.save(user);
-        log.info("User registered successfully. UserId: {}", savedUser.getId());
+        log.info(
+                "User registration completed successfully. UserId={}, Email={}",
+                savedUser.getId(),
+                savedUser.getEmail()
+        );
         return userMapper.toRegisterResponse(savedUser);
 
+    }
+
+    // login service.....
+    public LoginResponse loginUser(LoginRequest request){
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if(!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        String accessToken = jwtService.generateJwtToken(user);
+
+        return userMapper.toLoginResponse(
+                user,
+                accessToken,
+                "dummyRefreshToken"  // Replace with actual token generation logic)
+        );
     }
 }

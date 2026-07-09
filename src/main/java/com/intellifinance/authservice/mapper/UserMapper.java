@@ -1,6 +1,7 @@
 package com.intellifinance.authservice.mapper;
 
 import com.intellifinance.authservice.dto.request.RegisterRequest;
+import com.intellifinance.authservice.dto.response.LoginResponse;
 import com.intellifinance.authservice.dto.response.RegisterResponse;
 import com.intellifinance.authservice.entity.User;
 import org.mapstruct.Mapper;
@@ -16,4 +17,10 @@ public interface UserMapper {
     @Mapping(source = "id", target = "userId")
     @Mapping(target = "message", constant = USER_REGISTERED_SUCCESSFULLY)
     RegisterResponse toRegisterResponse(User user);
+
+    LoginResponse toLoginResponse(
+            User user,
+            String accessToken,
+            String refreshToken
+    );
 }
